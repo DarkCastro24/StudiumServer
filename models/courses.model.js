@@ -21,8 +21,7 @@ const cursoSchema = new mongoose.Schema({
     },
     horario: {
         type: String,
-        required: true,
-        maxlength: 30
+        required: true
     },
     fecha_inicio: {
         type: Date,
