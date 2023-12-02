@@ -49,7 +49,7 @@ controller.addSubject = async (req, res) => {
             subject.materia=== newSubject.materia); 
 
         if (isSubjectExist) {
-            return res.status(400).send({ message: "Subject already exists" });
+            return res.status(201).send({ message: "Subject already exists" });
         }
 
         user.materias_interes.push(newSubject);
