@@ -215,7 +215,7 @@ controller.filterByUserId = async (req, res) => {
         const cursos = await Curso.find({ id_tutor: idTutor }, { recursos: 0, tutorados: 0 });
         // Si no se encuentran cursos, enviar un mensaje adecuado
         if (!cursos || cursos.length === 0) {
-            return res.status(404).json({ message: "No se encontraron cursos para el tutor especificado" });
+            return res.status(201).json({ message: "No se encontraron cursos para el tutor especificado" });
         }
         // Enviar respuesta con los cursos encontrados
         res.status(200).json(cursos);
