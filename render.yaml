@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: studium-backend
+    env: node
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: Backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        sync: false
+      - key: DBURI
+        sync: false
+      - key: TOKEN_SECERT
+        sync: false
+      - key: TOKEN_EXP
+        value: 15d
+      - key: EMAIL
+        sync: false
+      - key: PASS
+        sync: false

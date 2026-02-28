@@ -3,11 +3,13 @@ const Curso = require('../models/courses.model');
 const controller = {};
 
 //  Funciones de cursos general
+
+// Guardar un nuevo curso
 controller.save = async (req, res, next) => {
     try {
         const curso = new Curso(req.body);
-        const savedCurso = await curso.save();
-        res.status(201).json(savedCurso);
+        const newCurso = await curso.save();
+        res.status(201).json(newCurso);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -15,15 +17,32 @@ controller.save = async (req, res, next) => {
 
 controller.findAll = async (req, res, next) => {
     try {
-        
-        const courses = await Curso.find().select('-recursos');
-        return res.status(200).json({ courses });
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+        const startIndex = (page - 1) * limit;
+
+        const total = await Curso.countDocuments(); 
+        const courses = await Curso.find().select('-recursos').limit(limit).skip(startIndex);
+
+        const totalPages = Math.ceil(total / limit);
+        const hasPrevPage = page > 1;
+        const hasNextPage = page < totalPages;
+
+        return res.status(200).json({
+            totalCourses: total,
+            totalPages: totalPages,
+            currentPage: page,
+            hasNextPage: hasNextPage,
+            hasPrevPage: hasPrevPage,
+            courses
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Internal Server Error'});
     }
 }
 
+// Obtener cursos con paginación
 controller.findAllPagination = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1; 
@@ -51,6 +70,7 @@ controller.findAllPagination = async (req, res, next) => {
     }
 }
 
+// Buscar un curso por su ID
 controller.findOneById = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -68,16 +88,14 @@ controller.findOneById = async (req, res, next) => {
     }
 }
 
+// Eliminar un curso por su ID
 controller.deleteById = async (req, res,next) => {
     try {
         const { id } = req.params;
-
         const curso = await Curso.findByIdAndDelete(id);
-
         if (!curso) {
             return res.status(404).json({error: "Course not found"});
         }
-
         return res.status(200).json({message: "Course deleted"});
     } catch (error) {
         console.error(error);
@@ -85,113 +103,99 @@ controller.deleteById = async (req, res,next) => {
     }
 }
 
+// Filtrar cursos por el campo de 'materia'
 controller.filterCoursesSubject = async (req, res) => {
     try {
         const { materia } = req.body;
-
         if (!materia) {
             return res.status(400).send({ message: 'Materia is required' });
         }
-
         const regex = new RegExp(materia, 'i'); 
-
         let cursos = await Curso.find({ materia: regex }).lean(); 
-
         res.json(cursos);
-
     } catch (error) {
         res.status(500).send({ message: 'Error retrieving courses', error });
     }
 };
 
+// Filtrar cursos por el nombre
 controller.filterCoursesName = async (req, res) => {
     try {
         const { materia } = req.body;
-
         if (!materia) {
             return res.status(400).send({ message: 'Materia is required' });
         }
-
         const regex = new RegExp(materia, 'i'); 
-
         let cursos = await Curso.find({ nombre: regex }).lean(); 
-
         res.json(cursos);
-
     } catch (error) {
         res.status(500).send({ message: 'Error retrieving courses', error });
     }
 };
 
 //  Funciones para la gestion de recursos
+
+// Añadir un recurso a un curso específico
 controller.saveResource = async (req, res) => {
     const cursoId = req.params.id; 
     const newResource = req.body; 
-
     try {
         const curso = await Curso.findById(cursoId);
         if (!curso) {
             return res.status(404).json({ message: 'Curso not found' });
         }
-
         curso.recursos.push(newResource); 
         await curso.save(); 
-
         res.status(201).json(curso);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
+// Actualizar un recurso específico de un curso
 controller.updateResource = async (req, res) => {
     const cursoId = req.params.courseId;
     const resourceId = req.params.resourceId;
     const newData = req.body;
-
     try {
         const course = await Curso.findById(cursoId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
         }
-
         const resource = course.recursos.id(resourceId);
         if (!resource) {
             return res.status(404).json({ message: 'Resource not found' });
         }
-
         Object.assign(resource, newData); 
         await course.save();
-
         res.status(200).json(course);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
+// Eliminar un recurso específico de un curso
 controller.deleteResource = async (req, res) => {
     const courseId = req.params.courseId;
     const resourceId = req.params.resourceId;
-
     try {
         const curso = await Curso.findById(courseId);
         if (!curso) {
             return res.status(404).json({ message: 'Curso not found' });
         }
-
         const resourceIndex = curso.recursos.findIndex(r => r._id.toString() === resourceId);
         if (resourceIndex === -1) {
             return res.status(404).json({ message: 'Resource not found' });
         }
-
         curso.recursos.splice(resourceIndex, 1);
         await curso.save();
-
         res.status(200).json({message: "Resource deleted"});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
+// Encontrar todos los recursos de un curso específico
 controller.findResources = async (req, res, next) => {
     try {
         const cursoId = req.params.id;  
@@ -215,7 +219,7 @@ controller.filterByUserId = async (req, res) => {
         const cursos = await Curso.find({ id_tutor: idTutor }, { recursos: 0, tutorados: 0 });
         // Si no se encuentran cursos, enviar un mensaje adecuado
         if (!cursos || cursos.length === 0) {
-            return res.status(201).json({ message: "No se encontraron cursos para el tutor especificado" });
+            return res.status(404).json({ message: "No se encontraron cursos para el tutor especificado" });
         }
         // Enviar respuesta con los cursos encontrados
         res.status(200).json(cursos);

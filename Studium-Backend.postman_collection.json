@@ -1,0 +1,465 @@
+{
+  "info": {
+    "_postman_id": "3a4d1f6a-2b2a-4f7f-9b2d-8d8a34c4c5b1",
+    "name": "Studium Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "tutorId", "value": "", "type": "string" },
+    { "key": "courseId", "value": "", "type": "string" },
+    { "key": "resourceId", "value": "", "type": "string" },
+    { "key": "subjectId", "value": "", "type": "string" },
+    { "key": "username", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guarda el _id devuelto por /auth/register en {{userId}}",
+                  "try {",
+                  "  const data = pm.response.json();",
+                  "  const id = (typeof data === 'string') ? data : (data && data._id) ? data._id : data;",
+                  "  if (id) pm.collectionVariables.set('userId', id.toString());",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"carlos_tutor\",\n  \"password\": \"Password123\",\n  \"nombre\": \"Carlos Martínez\",\n  \"tipo\": 1,\n  \"imagen\": \"https://i.pravatar.cc/150?img=11\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login (sets token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guarda el token devuelto por /auth/login en {{token}}",
+                  "try {",
+                  "  const data = pm.response.json();",
+                  "  if (data && data.token) pm.collectionVariables.set('token', data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"carlos_tutor\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "item": [
+        {
+          "name": "Send Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipients\": \"destino@correo.com\",\n  \"subject\": \"Prueba Studium\",\n  \"message\": \"Hola! Esto es una prueba desde la API\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/email/send-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "email", "send-email"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List Courses (page/limit)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", ""],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Courses (pagination route)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/pagination/?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "pagination", ""],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_tutor\": \"{{tutorId}}\",\n  \"nombre_tutor\": \"Carlos Martínez\",\n  \"materia\": \"Cálculo I\",\n  \"nombre\": \"Fundamentos de Cálculo Diferencial\",\n  \"horario\": \"Lunes y Miércoles 10:00-12:00\",\n  \"fecha_inicio\": \"2026-03-01\",\n  \"fecha_fin\": \"2026-06-30\",\n  \"imagen\": \"https://vilmanunez.com/wp-content/uploads/2016/03/herramientas-y-recursos-para-crear-curso-online.png\",\n  \"estado\": true,\n  \"objetivos\": \"Dominar límites, derivadas y sus aplicaciones\",\n  \"descripcion\": \"Curso introductorio de cálculo diferencial\",\n  \"recursos\": [],\n  \"tutorados\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/course/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Course By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Course",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Resources",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/resources/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "resources", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Resource To Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Guía de Derivadas\",\n  \"descripcion\": \"PDF con ejercicios resueltos\",\n  \"url\": \"https://ejemplo.com/guia-derivadas.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/course/resources/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "resources", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Resource",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Guía de Derivadas (actualizada)\",\n  \"descripcion\": \"Versión nueva\",\n  \"url\": \"https://ejemplo.com/guia-derivadas-v2.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/course/{{courseId}}/resource/{{resourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "{{courseId}}", "resource", "{{resourceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Resource",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/{{courseId}}/resource/{{resourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "{{courseId}}", "resource", "{{resourceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Filter Courses By Tutor ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/course/filter/{{tutorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "filter", "{{tutorId}}"]
+            }
+          }
+        },
+        {
+          "name": "Filter Courses By Subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"materia\": \"Cálculo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/course/filter/subject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "filter", "subject"]
+            }
+          }
+        },
+        {
+          "name": "Filter Courses By Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"materia\": \"Fundamentos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/course/filter/name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "course", "filter", "name"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", ""]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Subject (materia de interés)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"materia\": \"Programación\",\n  \"promedio\": \"9.20\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile/{{userId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile", "{{userId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile/{{userId}}/{{subjectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile", "{{userId}}", "{{subjectId}}"]
+            }
+          }
+        },
+        {
+          "name": "Filter Users By Nombre",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Diego\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/filter",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "filter"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carrera\": \"Ingeniería\",\n  \"num_materias\": 5,\n  \"cum\": \"8.75\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/user/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tutoring",
+      "item": [
+        {
+          "name": "Get Tutorados",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tutoring/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tutoring", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Tutorado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"nombre\": \"Nombre Estudiante\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tutoring/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tutoring", "{{courseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Tutorado",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/tutoring/{{courseId}}/{{username}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tutoring", "{{courseId}}", "{{username}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Usernames (email helper)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tutoring/email/{{courseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tutoring", "email", "{{courseId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
