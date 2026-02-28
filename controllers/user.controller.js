@@ -2,11 +2,10 @@ const User = require("../models/user.model");
 
 const controller = {};
 
+// Obtener todos los usuarios
 controller.getAll = async (req, res, next) => {
     try {
-
         const user = await User.find();
-        
         if (!user) {
             return res.status(404).send({ message: "User not found" });
         }
@@ -17,15 +16,14 @@ controller.getAll = async (req, res, next) => {
     }
 }
 
+// Filtrar usuarios por nombre
 controller.filterUsers = async (req, res, next) => {
     try {
         // Obtener el nombre del query string y crear una expresión regular
         const name = req.body.nombre;
         const regex = new RegExp(name, 'i'); // 'i' para hacer la búsqueda insensible a mayúsculas y minúsculas
-
         // Buscar usuarios que coincidan con la expresión regular
         const users = await User.find({ nombre: regex });
-
         // Enviar respuesta con los usuarios encontrados
         res.status(200).json(users);
     } catch (error) {
@@ -34,6 +32,7 @@ controller.filterUsers = async (req, res, next) => {
     }
 }
 
+// Añadir una nueva materia de interés a un usuario
 controller.addSubject = async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -62,16 +61,14 @@ controller.addSubject = async (req, res) => {
     }
 };
 
-
+// Obtener el perfil de un usuario por ID
 controller.getProfile = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         const user = await User.findById(userId).select();
-
         if (!user) {
             return res.status(404).send({ message: "User not found" });
         }
-
         res.json(user);
     } catch (error) {
         console.error(error);
@@ -79,26 +76,23 @@ controller.getProfile = async (req, res, next) => {
     }
 }
 
+// Actualizar el perfil de un usuario
 controller.updateProfile = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         const { carrera, num_materias, cum } = req.body; 
-
         const updateData = {};
         if (carrera !== undefined) updateData.carrera = carrera;
         if (num_materias !== undefined) updateData.num_materias = num_materias;
         if (cum !== undefined) updateData.cum = cum;
-
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $set: updateData },
             { new: true }
         );
-
         if (!updatedUser) {
             return res.status(404).send({ message: "User not found" });
         }
-
         res.status(200).send(updatedUser);
     } catch (error) {
         console.error(error);
@@ -106,6 +100,7 @@ controller.updateProfile = async (req, res, next) => {
     }
 }
 
+// Eliminar una materia de interés de un usuario
 controller.deleteSubject = async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -127,16 +122,14 @@ controller.deleteSubject = async (req, res) => {
     }
 };
 
+// Eliminar un usuario por ID
 controller.deleteUser = async (req, res) => {
     try {
         const userId = req.params.userId;
-
         const result = await User.findByIdAndDelete(userId);
-
         if (!result) {
             return res.status(404).send({ message: "User not found" });
         }
-
         res.status(200).send({ message: "User successfully deleted" });
     } catch (error) {
         console.error(error);
