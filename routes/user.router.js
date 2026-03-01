@@ -27,6 +27,10 @@ router.patch("/profile/:userId",
     userController.updateProfile
 );
 
+router.put("/profile/:userId", 
+    userController.updatePassword
+);
+
 router.delete("/:userId", 
     userController.deleteUser
 );

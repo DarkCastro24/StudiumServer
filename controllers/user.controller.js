@@ -100,6 +100,31 @@ controller.updateProfile = async (req, res, next) => {
     }
 }
 
+// Actualizar contraseña de un usuario
+controller.updatePassword = async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).send({ message: "Password is required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).send({ message: "User not found" });
+        }
+
+        user.password = password;
+        await user.save();
+
+        res.status(200).send({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+    }
+}
+
 // Eliminar una materia de interés de un usuario
 controller.deleteSubject = async (req, res) => {
     try {
