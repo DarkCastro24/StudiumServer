@@ -2,7 +2,9 @@ const Mongoose = require(("mongoose"));
 const Schema = Mongoose.Schema;
 
 const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 const debug = require("debug")("app:user-model");
+const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 10);
 
 const userSchema = new Schema({
     username: {
@@ -62,14 +64,7 @@ userSchema.methods = {
     encryptPassword: function (password) {
         if (!password) return "";
         try {
-            const _password = crypto.pbkdf2Sync(
-                password,
-                this.salt,
-                1000,64,
-                `sha512`,
-            ).toString("hex");
-            
-            return _password;
+            return bcrypt.hashSync(password, BCRYPT_ROUNDS);
         } catch (error) {
             debug({error});
             return "";
@@ -78,16 +73,41 @@ userSchema.methods = {
     makeSalt: function(){
         return crypto.randomBytes(16).toString("hex");
     },
-    comparePassword: function(password){
-        return this.hashedPassword === this.encryptPassword(password);
+    comparePassword: async function(password){
+        if (!this.hashedPassword || !password) {
+            return false;
+        }
+
+        try {
+            if (this.hashedPassword.startsWith("$2")) {
+                return await bcrypt.compare(password, this.hashedPassword);
+            }
+
+            const legacyPassword = crypto.pbkdf2Sync(
+                password,
+                this.salt,
+                1000,64,
+                `sha512`,
+            ).toString("hex");
+
+            return this.hashedPassword === legacyPassword;
+        } catch (error) {
+            debug({error});
+            return false;
+        }
     }
 }
 
 userSchema
     .virtual("password")
-    .set(function(password = crypto.randomBytes(16).toString()) {
-        this.salt = this.makeSalt();
-        this.hashedPassword = this.encryptPassword(password);
+    .set(function(password) {
+        const _password = password || process.env.DEFAULT_PASSWORD;
+        if (!_password) {
+            return;
+        }
+
+        this.salt = undefined;
+        this.hashedPassword = this.encryptPassword(_password);
 });
 
 module.exports = Mongoose.model("User",userSchema);
