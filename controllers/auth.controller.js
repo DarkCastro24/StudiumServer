@@ -27,15 +27,31 @@ const createLoginResponse = async (user, subject) => {
 controller.register = async (req, res, next) => {
     try {
         const {username, password, nombre, tipo, imagen} = req.body;
+        const defaultPassword = process.env.DEFAULT_PASSWORD;
     
         const user = await User.findOne({$or: [{username: username}]});
         if (user) {
+            if (!user.hashedPassword) {
+                const resolvedPassword = password || defaultPassword;
+                if (!resolvedPassword) {
+                    return res.status(500).json({error: "DEFAULT_PASSWORD is not configured"});
+                }
+
+                user.password = resolvedPassword;
+                await user.save();
+            }
+
             return res.status(201).json(user._id);
+        }
+
+        const resolvedPassword = password || defaultPassword;
+        if (!resolvedPassword) {
+            return res.status(500).json({error: "DEFAULT_PASSWORD is not configured"});
         }
 
         const newUser = new User({
             username: username,
-            password: password,
+            password: resolvedPassword,
             nombre: nombre,
             tipo: tipo,
             imagen: imagen
@@ -67,7 +83,7 @@ controller.login = async (req, res, next) => {
         
         // Si existe, verificamos la password
         // Si la password no coincide -- 401
-        if (!user.comparePassword(password)) {
+        if (!await user.comparePassword(password)) {
             return res.status(401).json({error: "Incorrect Password"});
         }
 
@@ -91,7 +107,7 @@ controller.loginWithUsernamePassword = async (req, res, next) => {
             return res.status(404).json({error: "User not found"});
         }
 
-        if (!user.comparePassword(password)) {
+        if (!await user.comparePassword(password)) {
             return res.status(401).json({error: "Incorrect Password"});
         }
 
