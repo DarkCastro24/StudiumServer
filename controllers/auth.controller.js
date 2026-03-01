@@ -3,6 +3,27 @@ const { createToken, verifyToken } = require("../utils/jwt.tools");
 
 const controller = {};
 
+const createLoginResponse = async (user, subject) => {
+    const token = await createToken(subject);
+
+    let _tokens = [...user.tokens];
+    const _verifyPromises = _tokens.map(async (_t) => {
+        const status = await verifyToken(_t);
+        return status ? _t : null;
+    });
+
+    _tokens = (await Promise.all(_verifyPromises))
+    .filter(_t => _t)
+    .slice(0,4);
+
+    _tokens = [token, ..._tokens];
+    user.tokens = _tokens;
+
+    await user.save();
+
+    return {token};
+}
+
 controller.register = async (req, res, next) => {
     try {
         const {username, password, nombre, tipo, imagen} = req.body;
@@ -50,31 +71,32 @@ controller.login = async (req, res, next) => {
             return res.status(401).json({error: "Incorrect Password"});
         }
 
-        // Si la password coincide -- logueamos (TO DO)
-        
-        // Crear un token
-        const token = await createToken(id);
-        
-        // Almacenar token
-        
-        // Verificar la integridad de los tokens actuales = max 5 sesiones
-        let _tokens = [...user.tokens];
-        const _verifyPromises = _tokens.map(async (_t) => {
-            const status = await verifyToken(_t);
-            return status ? _t : null;
-        });
+        // Devolver mismo response del resto de inicios de sesión
+        const response = await createLoginResponse(user, user.username);
+        return res.status(200).json(response);
 
-        _tokens = (await Promise.all(_verifyPromises))
-        .filter(_t => _t)
-        .slice(0,4);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({error: "Internal Server Error"});        
+    }
+}
 
-        _tokens = [token, ..._tokens];
-        user.tokens = _tokens;
+controller.loginWithUsernamePassword = async (req, res, next) => {
+    try {
+        const { username, password } = req.body;
 
-        await user.save();
-        
-        // Devolver token
-        return res.status(200).json({token});
+        const user = await User.findOne({ username: username });
+
+        if (!user) {
+            return res.status(404).json({error: "User not found"});
+        }
+
+        if (!user.comparePassword(password)) {
+            return res.status(401).json({error: "Incorrect Password"});
+        }
+
+        const response = await createLoginResponse(user, user.username);
+        return res.status(200).json(response);
 
     } catch (error) {
         console.error(error);
