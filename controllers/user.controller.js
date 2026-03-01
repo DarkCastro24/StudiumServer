@@ -1,5 +1,7 @@
 const User = require("../models/user.model");
+const bcrypt = require("bcrypt");
 
+const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 10);
 const controller = {};
 
 // Obtener todos los usuarios
@@ -80,7 +82,29 @@ controller.getProfile = async (req, res, next) => {
 controller.updateProfile = async (req, res, next) => {
     try {
         const userId = req.params.userId;
-        const { carrera, num_materias, cum } = req.body; 
+        const { carrera, num_materias, cum, password } = req.body; 
+        
+        // Si viene password, hashearla directamente con bcrypt
+        if (password) {
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).send({ message: "User not found" });
+            }
+
+            const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
+            user.hashedPassword = hashedPassword;
+            user.salt = undefined;
+
+            if (carrera !== undefined) user.carrera = carrera;
+            if (num_materias !== undefined) user.num_materias = num_materias;
+            if (cum !== undefined) user.cum = cum;
+
+            user.markModified('hashedPassword');
+            await user.save();
+
+            return res.status(200).send(user);
+        }
+
         const updateData = {};
         if (carrera !== undefined) updateData.carrera = carrera;
         if (num_materias !== undefined) updateData.num_materias = num_materias;
@@ -115,7 +139,10 @@ controller.updatePassword = async (req, res, next) => {
             return res.status(404).send({ message: "User not found" });
         }
 
-        user.password = password;
+        const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
+        user.hashedPassword = hashedPassword;
+        user.salt = undefined;
+        user.markModified('hashedPassword');
         await user.save();
 
         res.status(200).send({ message: "Password updated successfully" });
