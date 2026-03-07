@@ -203,7 +203,7 @@ controller.findResources = async (req, res, next) => {
         if (!curso) {
             return res.status(404).json({ message: 'Curso not found' });
         }
-        res.status(200).json(resources);
+        res.status(200).json(curso.recursos);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Internal Server Error'});
