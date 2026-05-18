@@ -6,7 +6,10 @@ const dbhost = process.env.DBHOST || "localhost";
 const dbport = process.env.DBPORT || "27017";
 const dbname = process.env.DBNAME || "studium";
 
-const dburi = process.env.DBURI || 'mongodb+srv://Kstro:r2qpMCJwo8oddD37@studium.rcn9oqq.mongodb.net/?retryWrites=true&w=majority';
+const dburi = process.env.DBURI ;
+if (!dburi){
+    throw new Error("DBURI enviroment variable is missing");
+}
 
 /*
     Connect to database method

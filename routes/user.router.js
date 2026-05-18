@@ -2,9 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const userController = require("../controllers/user.controller");
+const {authentication, authorization} = require("../middleware/auth.middleware");
+const ROLES = require("../data/roles.constants.json");
 
 // /api/user/... 
 router.get("/", 
+    // authentication,
+    // authorization(ROLES.ADMIN),
     userController.getAll
 );
 
