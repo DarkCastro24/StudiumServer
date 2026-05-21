@@ -14,7 +14,7 @@ middlewares.authentication = async (req, res, next) => {
 
         if (!authorization) {
             return res.status(401).json({error: "Autenticacion es requerida"});
-              debug("Missing aut property in request");
+              debug("Missing auth property in request");
         }
 
         // Validez del token
@@ -42,7 +42,6 @@ middlewares.authentication = async (req, res, next) => {
         const userId = payload["sub"];
         // Verificar el usuario
         const user = await User.findById(userId);
-
         if (!user) {
             return res.status(401).json({error: "Autenticacion es requerida"});
             debug("The user doesnt exists"); 
@@ -68,25 +67,43 @@ middlewares.authentication = async (req, res, next) => {
     }
 }
 
-middlewares.authorization = (roleRequired) => {
+middlewares.authorization = (roleRequired = []) => {
+    const allowedRoles = Array.isArray(roleRequired) ? roleRequired : [roleRequired];
     return (req, res, next) => {
         // Premisa: Debe haber sido autenticado primero
         try {
         const {roles = []} = req.user;
-        // Verificar si el rol esta en la coleccion del usuario
-        const isAuth = roles.includes(roleRequired);
-        const isSysadmin = roles.includes(ROLES.SYSADMIN);
+        // Tiene el usuario alguno de esos roles
+        const hasRole = allowedRoles.some(role => roles.includes(role));
         // Si no esta, responder not authorized
-        if(!isAuth && !isSysadmin){
+        if(!hasRole){
             return res.status(403).json({error: "Forbidden"});
         } 
-          next();  
+        next();  
 
         } catch(error) {    
             console.error(error);
             return res.status(500).json({error: "Internal Server Error"});     
     }
 }
+}
+
+middlewares.isOwner = (req, res, next) => {
+    const isOwner = req.user._id.toString() === req.params.userId;
+    if(!isOwner){
+        return res.status(403).json({error: "Forbidden"});
+        debug("Only the user themselves can change this information");
+    } 
+    next();
+}
+
+middlewares.isOwnerOrAdmin = (req, res, next) => {
+     const isOwner = req.user._id.toString() === req.params.userId;
+     const isAdmin = req.user.roles.includes(ROLES.ADMIN) || req.user.roles.includes(ROLES.SYSADMIN);
+
+       if(!isOwner && !isAdmin){
+        return res.status(403).json({error: "Forbidden"});
+       }
 }
 
 module.exports = middlewares;

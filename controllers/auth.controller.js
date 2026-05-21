@@ -70,11 +70,15 @@ controller.register = async (req, res, next) => {
 controller.login = async (req, res, next) => {
     try {
         // Obtener la info -- identificador, password
-        const { id, password } = req.body;
+        const { usern, password } = req.body;
+
+        if (!usern || !password){
+            return res.status(400).json({error: "Missing credentials"});
+        }
         
         // Verificar si el usuario existe
         const user = 
-        await User.findOne({$or: [{username: id},{email: id}] });
+        await User.findOne({$or: [{username: usern},{email: usern}] });
         
         // Si no existe retornar 404
         if (!user) {
@@ -88,7 +92,7 @@ controller.login = async (req, res, next) => {
         }
 
         // Devolver mismo response del resto de inicios de sesión
-        const response = await createLoginResponse(user, user.username);
+        const response = await createLoginResponse(user, user._id);
         return res.status(200).json(response);
 
     } catch (error) {
@@ -99,9 +103,9 @@ controller.login = async (req, res, next) => {
 
 controller.loginWithUsernamePassword = async (req, res, next) => {
     try {
-        const { username, password } = req.body;
+        const { usern, password } = req.body;
 
-        const user = await User.findOne({ username: username });
+        const user = await User.findOne({ username: usern });
 
         if (!user) {
             return res.status(404).json({error: "User not found"});
@@ -111,7 +115,7 @@ controller.loginWithUsernamePassword = async (req, res, next) => {
             return res.status(401).json({error: "Incorrect Password"});
         }
 
-        const response = await createLoginResponse(user, user.username);
+        const response = await createLoginResponse(user, user._id);
         return res.status(200).json(response);
 
     } catch (error) {
