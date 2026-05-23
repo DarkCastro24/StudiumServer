@@ -1,6 +1,5 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
-
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 10);
 const controller = {};
 

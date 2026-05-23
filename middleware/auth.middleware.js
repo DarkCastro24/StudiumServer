@@ -88,22 +88,8 @@ middlewares.authorization = (roleRequired = []) => {
 }
 }
 
-middlewares.isOwner = (req, res, next) => {
-    const isOwner = req.user._id.toString() === req.params.userId;
-    if(!isOwner){
-        return res.status(403).json({error: "Forbidden"});
-        debug("Only the user themselves can change this information");
-    } 
-    next();
-}
 
-middlewares.isOwnerOrAdmin = (req, res, next) => {
-     const isOwner = req.user._id.toString() === req.params.userId;
-     const isAdmin = req.user.roles.includes(ROLES.ADMIN) || req.user.roles.includes(ROLES.SYSADMIN);
 
-       if(!isOwner && !isAdmin){
-        return res.status(403).json({error: "Forbidden"});
-       }
-}
+
 
 module.exports = middlewares;

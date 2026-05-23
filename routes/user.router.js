@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-
 const userController = require("../controllers/user.controller");
-const { authentication, authorization, isOwner, isOwnerOrAdmin } = require("../middleware/auth.middleware");
+const { authentication, authorization } = require("../middleware/auth.middleware");
+const {isOwner} = require("../middleware/ownership.middleware");
 const ROLES = require("../data/roles.constants.json");
 
 // /api/user/... 
