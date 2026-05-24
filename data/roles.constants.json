@@ -1,0 +1,9 @@
+
+
+ {
+    "SYSADMIN": "sysadmin",
+    "ADMIN": "admin",
+    "TUTOR": "tutor", 
+    "USER": "user"
+}
+

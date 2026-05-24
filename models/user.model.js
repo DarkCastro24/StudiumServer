@@ -1,8 +1,10 @@
+const ROLES = require("../data/roles.constants.json")
 const Mongoose = require(("mongoose"));
 const Schema = Mongoose.Schema;
 
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const { type } = require("os");
 const debug = require("debug")("app:user-model");
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 10);
 
@@ -25,6 +27,11 @@ const userSchema = new Schema({
         type: Number,
         enum: [1, 2, 3], // Solo tipo 1,2,3
         default: 2
+    },
+    roles: {
+        type: [String],
+        enum: Object.values(ROLES) ,
+        default: [ROLES.USER]
     },
     imagen:{
         type: String
